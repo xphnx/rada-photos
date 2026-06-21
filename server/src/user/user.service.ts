@@ -20,6 +20,16 @@ export class UserService {
     return user;
   }
 
+  async findById(id: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    return user;
+  }
+
   async create(email: string, passwordHash: string) {
     const rawNewUser = this.userRepository.create({ email, passwordHash });
     const newUser = await this.userRepository.save(rawNewUser);
