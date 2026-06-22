@@ -1,9 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import 'tailwindcss';
 
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Fraunces', ui-serif, Georgia, serif;
+   --font-grotesk: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
 
   /* тёплая палитра «семейный альбом» */
   --color-album-bg: #f6efe4;       /* кремовый фон */
@@ -14,9 +15,39 @@
   --color-album-accent: #c2693c;   /* терракот — акцент */
 }
 
+.dark {
+  --color-album-bg: #1d1813;
+  --color-album-card: #272019;
+  --color-album-ink: #f1e9dc;
+  --color-album-muted: #a99a85;
+  --color-album-line: #3a3127;
+  --color-album-accent: #d77a4a;
+}
+
+
 body {
   background-color: var(--color-album-bg);
   color: var(--color-album-ink);
   font-family: var(--font-sans);
   margin: 0;
 }
+
+@keyframes glint {
+  0%, 100% {
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+  }
+  8% {
+    box-shadow:
+      0 0 0 8px color-mix(in srgb, var(--color-album-accent) 30%, transparent),
+      0 6px 18px rgb(0 0 0 / 0.25);
+    transform: scale(1.06);
+  }
+  16% {
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+  }
+}
+
+.animate-glint {
+  animation: glint 4s ease-in-out infinite;
+}
+

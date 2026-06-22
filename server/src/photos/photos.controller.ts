@@ -29,11 +29,13 @@ export class PhotosController {
   async thumbnail(
     @Query('source') source: string,
     @Query('path') path: string,
+    @Query('size') size: string | undefined,
     @Res() response: Response,
   ) {
     const { buffer, contentType } = await this.photosService.getThumbnail(
       source,
       path,
+      size,
     );
 
     response.setHeader('Content-Type', contentType);

@@ -83,7 +83,7 @@ export const LoginPage: FC = () => {
                 type="email"
                 placeholder="you@example.com"
                 {...register('email')}
-                className='w-full rounded-xl border border-album-line bg-white px-4 py-3 text-album-ink placeholder:text-album-muted/60 outline-none transition focus:border-album-accent focus:ring-2 focus:ring-album-accent/30'
+                className='w-full rounded-xl border border-album-line bg-album-card px-4 py-3 text-album-ink placeholder:text-album-muted/60 outline-none transition focus:border-album-accent focus:ring-2 focus:ring-album-accent/30'
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">
@@ -101,7 +101,7 @@ export const LoginPage: FC = () => {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Введите пароль"
                   {...register('password')}
-                  className='w-full rounded-xl border border-album-line bg-white px-4 py-3 text-album-ink placeholder:text-album-muted/60 outline-none transition focus:border-album-accent focus:ring-2 focus:ring-album-accent/30 pr-11'
+                  className='w-full rounded-xl border border-album-line bg-album-card px-4 py-3 text-album-ink placeholder:text-album-muted/60 outline-none transition focus:border-album-accent focus:ring-2 focus:ring-album-accent/30'
                 />
                 <button
                   type="button"
@@ -154,7 +154,7 @@ export const LoginPage: FC = () => {
 
           <a
             href="/api/auth/yandex"
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-album-line bg-white py-3 text-album-ink transition hover:bg-album-bg"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-album-line bg-album-card py-3 text-album-ink transition hover:bg-album-bg"
           >
             <span className="grid h-5 w-5 place-items-center rounded-full bg-red-500 text-xs font-bold text-white">
               Я

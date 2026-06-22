@@ -5,20 +5,30 @@ import type { Photo } from '../models/Photo';
 interface Props {
   photo: Photo;
   index: number;
+  cardRef?: (el: HTMLElement | null) => void;
+  onOpen?: () => void;
 }
 
-export const PhotoCard: FC<Props> = ({ photo, index }) => {
+export const PhotoCard: FC<Props> = ({ photo, index, cardRef, onOpen }) => {
   const [aspect, setAspect] = useState<number | null>(null);
   const [borderDone, setBorderDone] = useState(false);
 
   useEffect(() => {
     const img = new Image();
-    img.src = photo.thumbnailUrl;
-    img.onload = () => setAspect(img.naturalWidth / img.naturalHeight);
+    const handleLoad = () => setAspect(img.naturalWidth / img.naturalHeight);
+
+    img.onload = handleLoad;        
+    img.src = photo.thumbnailUrl;  
+
+    if (img.complete && img.naturalWidth > 0) {
+      handleLoad();
+    }
   }, [photo.thumbnailUrl]);
 
   return (
     <figure
+      ref={cardRef}
+      onClick={onOpen}
       className="group relative cursor-pointer overflow-hidden rounded-xl bg-album-card"
       style={{ aspectRatio: aspect ?? 3 / 4 }}
     >

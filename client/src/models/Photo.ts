@@ -4,6 +4,7 @@ export interface Photo {
   source: string;
   sourceLabel: string;
   thumbnailUrl: string;
+  takenAt: string;
 }
 
 export interface PhotosPage {

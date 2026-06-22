@@ -129,7 +129,7 @@ export class PhotosService implements OnModuleInit {
       .flatMap((r) => r.value);
   }
 
-  async getThumbnail(sourceKey: string, path: string) {
+  async getThumbnail(sourceKey: string, path: string, size = 'L') {
     const source = this.getSource(sourceKey);
 
     const meta = await this.yandexGet<{ preview?: string }>(
@@ -137,7 +137,7 @@ export class PhotosService implements OnModuleInit {
       '/resources',
       {
         path,
-        preview_size: 'L',
+        preview_size: size,
         fields: 'preview',
       },
     );

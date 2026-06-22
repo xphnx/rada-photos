@@ -1,3 +1,7 @@
 export { ProtectedRoute } from './ProtectedRoute'
 export { PhotoCard } from './PhotoCard'
+export { PhotoModal } from './PhotoModal'
 export { Layout } from './Layout'
+export { Spinner } from './Spinner'
+export { ThemeSwitcher } from './ThemeSwitcher'
+export { ModalImage } from './ModalImage'
