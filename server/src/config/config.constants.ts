@@ -5,4 +5,12 @@ export const YANDEX_LOGIN = {
   FRONTEND_URL: 'FRONTEND_URL',
 };
 
+export const YANDEX_DISK = {
+  MAIN_TOKEN: 'YANDEX_DISK_TOKEN_MAIN',
+  SECOND_TOKEN: 'YANDEX_DISK_TOKEN_SECOND',
+  MAIN_PATH: 'YANDEX_DISK_PATH_MAIN',
+  SECOND_PATH: 'YANDEX_DISK_PATH_SECOND',
+  API: 'https://cloud-api.yandex.net/v1/disk',
+};
+
 export const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;

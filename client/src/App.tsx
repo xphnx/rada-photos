@@ -3,7 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import { Toaster } from 'sonner';
 
 import { FeedPage, LoginPage } from "./pages"
-import { ProtectedRoute } from "./components"
+import { Layout, ProtectedRoute } from "./components"
 
 const App: FC = () => {
   return (
@@ -11,7 +11,11 @@ const App: FC = () => {
       <Toaster />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/feed" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/feed" element={<FeedPage />} />
+          </Route>
+        </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

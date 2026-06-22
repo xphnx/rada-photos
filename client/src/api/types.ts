@@ -1,3 +1,4 @@
 export enum ApiTagEnum {
-    AUTH = 'AUTH'
+    AUTH = 'AUTH',
+    PHOTO = 'PHOTO'
 }

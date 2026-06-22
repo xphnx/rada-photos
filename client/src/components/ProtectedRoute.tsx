@@ -1,9 +1,9 @@
-import type { FC, PropsWithChildren } from "react";
-import { Navigate } from "react-router-dom";
+import type { FC } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 
 import { useGetMeQuery } from "../api/authApi/authApi";
 
-export const ProtectedRoute: FC<PropsWithChildren> = ({ children }) => {
+export const ProtectedRoute: FC = () => {
     const { data, isLoading, isError } = useGetMeQuery();
 
     if (isLoading) {
@@ -14,5 +14,5 @@ export const ProtectedRoute: FC<PropsWithChildren> = ({ children }) => {
         return <Navigate to="/login" replace />
     }
 
-    return <>{children}</>
+    return <Outlet />
 }

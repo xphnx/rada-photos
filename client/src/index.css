@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+
+  /* тёплая палитра «семейный альбом» */
+  --color-album-bg: #f6efe4;       /* кремовый фон */
+  --color-album-card: #fffdf8;     /* карточки/панели */
+  --color-album-ink: #3b3126;      /* тёплый тёмный текст */
+  --color-album-muted: #8d7c68;    /* приглушённый текст */
+  --color-album-line: #e7dccb;     /* границы */
+  --color-album-accent: #c2693c;   /* терракот — акцент */
+}
+
+body {
+  background-color: var(--color-album-bg);
+  color: var(--color-album-ink);
+  font-family: var(--font-sans);
+  margin: 0;
+}
