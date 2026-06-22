@@ -105,14 +105,14 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const newUser = await this.userService.create(dto.email, passwordHash);
 
-    return newUser;
+    return this.buildAuthResponse(newUser);
   }
 
   async login(dto: LoginDto) {
     const user = await this.userService.findByEmail(dto.email);
 
     if (!user || !user.passwordHash) {
-      return new UnauthorizedException('Неверные логин и/или пароль!');
+      throw new UnauthorizedException('Неверные логин и/или пароль!');
     }
 
     const isValidPassword = await bcrypt.compare(
@@ -121,7 +121,7 @@ export class AuthService {
     );
 
     if (!isValidPassword) {
-      return new UnauthorizedException('Неверные логин и/или пароль!');
+      throw new UnauthorizedException('Неверные логин и/или пароль!');
     }
 
     return this.buildAuthResponse(user);

@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Response } from 'express';
+import type { CookieOptions, Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -16,6 +16,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt.guard';
 import { CurrentUser } from './current-user.decorator';
 import { User } from '../user/user.entity';
+import { COOKIE_MAX_AGE } from '../config/config.constants';
 
 @Controller('auth')
 export class AuthController {
@@ -24,18 +25,46 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  private setAuthCookie(response: Response, token: string) {
+    const cookieOptions: CookieOptions = {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: false,
+      maxAge: COOKIE_MAX_AGE,
+      path: '/',
+    };
+
+    response.cookie('token', token, cookieOptions);
+  }
+
   @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  async register(
+    @Body() dto: RegisterDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const { token, user } = await this.authService.register(dto);
+
+    this.setAuthCookie(response, token);
+
+    return user;
   }
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const { token, user } = await this.authService.login(dto);
+
+    this.setAuthCookie(response, token);
+
+    return user;
   }
 
   @Post('logout')
-  logout() {
+  logout(@Res({ passthrough: true }) response: Response) {
+    response.clearCookie('token', { path: '/' });
+
     return { success: true };
   }
 
@@ -56,8 +85,10 @@ export class AuthController {
   async yandexCallback(@Query('code') code: string, @Res() response: Response) {
     const { token } = await this.authService.yandexLogin(code);
 
+    this.setAuthCookie(response, token);
+
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
-    return response.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+    return response.redirect(`${frontendUrl}/feed`);
   }
 }

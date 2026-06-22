@@ -4,3 +4,5 @@ export const YANDEX_LOGIN = {
   YANDEX_CALLBACK_URL: 'YANDEX_CALLBACK_URL',
   FRONTEND_URL: 'FRONTEND_URL',
 };
+
+export const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
