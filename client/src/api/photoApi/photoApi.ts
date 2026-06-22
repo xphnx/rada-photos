@@ -1,6 +1,5 @@
-import type { PhotosPage } from '../../models/Photo';
 import { api } from '../baseApi';
-import { ApiTagEnum } from '../types';
+import { ApiTagEnum, type PhotosPage } from '../types';
 
 export const photosApi = api.injectEndpoints({
   endpoints: (builder) => ({

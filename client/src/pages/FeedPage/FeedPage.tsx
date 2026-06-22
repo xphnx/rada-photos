@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FC } from "react";
 
-import { useGetPhotosInfiniteQuery } from "../../api/authApi/photoApi";
+import { useGetPhotosInfiniteQuery } from "../../api/photoApi/photoApi";
 import { PhotoCard, PhotoModal, Spinner } from "../../components";
 import { useColumnCount } from "./useColumnCount";
 import type { Photo } from "../../models/Photo";

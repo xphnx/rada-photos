@@ -8,6 +8,9 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { PhotosModule } from './photos/photos.module';
+import { CommentModule } from './comment/comment.module';
+import { ReactionsModule } from './reaction/reaction.module';
+import { LikeModule } from './like/like.module';
 
 @Module({
   imports: [
@@ -28,6 +31,9 @@ import { PhotosModule } from './photos/photos.module';
     AuthModule,
     UserModule,
     PhotosModule,
+    ReactionsModule,
+    CommentModule,
+    LikeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

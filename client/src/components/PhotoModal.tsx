@@ -1,9 +1,17 @@
 import { useEffect, useState, type FC } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import { skipToken } from '@reduxjs/toolkit/query/react';
 
 import type { Photo } from '../models/Photo';
 import { ModalImage } from './ModalImage';
+import {
+  useGetReactionSummaryQuery,
+  useToggleLikeMutation,
+  useToggleReactionMutation,
+} from '../api/reactionApi/reactionApi';
+import { ReactionPicker } from './ReactionPicker';
+
 
 interface Props {
   photos: Photo[];
@@ -24,6 +32,11 @@ const [direction, setDirection] = useState(0);
   const photo = photos[index];
   const hasPrev = index > 0;
   const hasNext = index < photos.length - 1;
+
+  const { data: summary } = useGetReactionSummaryQuery(photo ? photo.id : skipToken);
+  const [toggleReaction] = useToggleReactionMutation();
+  const [toggleLike] = useToggleLikeMutation();
+
 
   const goPrev = () => {
     if (!hasPrev) return;
@@ -130,11 +143,31 @@ const [direction, setDirection] = useState(0);
         </div>
 
         <div className="border-b border-album-line p-4">
-          <p className="mb-2 text-xs uppercase tracking-wide text-album-muted">
-            Реакции
-          </p>
-          <p className="text-sm text-album-muted">Скоро можно будет реагировать.</p>
+        <p className="mb-3 text-xs uppercase tracking-wide text-album-muted">
+          Реакции
+        </p>
+
+         <div className="flex items-center gap-2">
+          <button
+            onClick={() => photo && toggleLike({ photoId: photo.id })}
+            className={`flex shrink-0 items-center gap-2 rounded-full  px-4 py-1.5 transition ${
+              summary?.liked
+                ? 'border-rose-400 bg-rose-50 text-rose-600'
+                : 'text-album-ink hover:bg-album-bg'
+            }`}
+          >
+            <span>❤️</span>
+            <span className="text-sm font-medium">{summary?.likeCount ?? 0}</span>
+          </button>
+
+          <ReactionPicker
+            summary={summary}
+            onReact={(type) => photo && toggleReaction({ photoId: photo.id, type })}
+          />
         </div>
+
+        </div>
+
 
         <div className="flex-1 overflow-y-auto p-4">
           <p className="mb-2 text-xs uppercase tracking-wide text-album-muted">

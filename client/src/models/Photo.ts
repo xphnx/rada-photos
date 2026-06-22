@@ -6,8 +6,3 @@ export interface Photo {
   thumbnailUrl: string;
   takenAt: string;
 }
-
-export interface PhotosPage {
-  items: Photo[];
-  total: number;
-}
