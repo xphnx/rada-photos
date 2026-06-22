@@ -30,6 +30,30 @@ export class UserService {
     return user;
   }
 
+  async findByYandexId(yandexId: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        yandexId,
+      },
+    });
+
+    return user;
+  }
+
+  async createYandexUser(email: string, yandexId: string) {
+    const rawNewUser = this.userRepository.create({ email, yandexId });
+    const newUser = await this.userRepository.save(rawNewUser);
+
+    return newUser;
+  }
+
+  async addYandexId(user: User, yandexId: string) {
+    user.yandexId = yandexId;
+    const userWithYandexId = this.userRepository.save(user);
+
+    return userWithYandexId;
+  }
+
   async create(email: string, passwordHash: string) {
     const rawNewUser = this.userRepository.create({ email, passwordHash });
     const newUser = await this.userRepository.save(rawNewUser);
