@@ -11,6 +11,7 @@ import { PhotosModule } from './photos/photos.module';
 import { CommentModule } from './comment/comment.module';
 import { ReactionsModule } from './reaction/reaction.module';
 import { LikeModule } from './like/like.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { LikeModule } from './like/like.module';
     ReactionsModule,
     CommentModule,
     LikeModule,
+    ProfileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

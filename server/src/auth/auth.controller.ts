@@ -71,7 +71,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: User) {
-    return user;
+    return this.authService.getProfile(user.id);
   }
 
   @Get('yandex')

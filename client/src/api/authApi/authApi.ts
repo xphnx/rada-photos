@@ -1,10 +1,11 @@
 import type { Credentials, User } from '../../models/Auth';
+import type { ProfileMe } from '../../models/Profile';
 import { api } from '../baseApi';
 import { ApiTagEnum } from '../types';
 
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getMe: builder.query<User, void>({
+    getMe: builder.query<ProfileMe, void>({
       query: () => ({
         url: `auth/me`,
       }),

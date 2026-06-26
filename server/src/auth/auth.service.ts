@@ -12,6 +12,7 @@ import { LoginDto } from './dto/login.dto';
 import { UserService } from '../user/user.service';
 import { User } from '../user/user.entity';
 import { YANDEX_LOGIN } from '../config/config.constants';
+import { isAdminEmail } from './admin/admin.util';
 
 @Injectable()
 export class AuthService {
@@ -134,6 +135,22 @@ export class AuthService {
     const user = await this.findOrCreateYandexUser(profile);
 
     return this.buildAuthResponse(user);
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.userService.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      hasPassword: user.passwordHash !== null,
+      hasYandex: user.yandexId !== null,
+      isAdmin: isAdminEmail(user.email, this.configService),
+    };
   }
 
   getYandexAuthUrl() {

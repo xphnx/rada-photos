@@ -1,6 +1,8 @@
 export interface Photo {
   id: string;
   name: string;
+  type: 'image' | 'video';
+  videoUrl?: string;
   source: string;
   sourceLabel: string;
   thumbnailUrl: string;

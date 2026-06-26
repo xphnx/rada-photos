@@ -18,7 +18,9 @@ export interface YandexItem {
 export interface Photo {
   id: string;
   name: string;
+  type: 'image' | 'video';
   thumbnailUrl: string;
+  videoUrl?: string;
   takenAt: string;
   likeCount: number;
   reactions: Record<string, number>;

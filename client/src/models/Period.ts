@@ -9,4 +9,6 @@ export interface Period {
 export interface PhotoFilter {
   season?: Season;
   year?: number;
+  order?: 'asc' | 'desc';
 }
+

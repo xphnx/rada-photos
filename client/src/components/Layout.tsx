@@ -51,7 +51,7 @@ export const Layout: FC = () => {
         <NavLink to="/feed" className={linkClass} onClick={() => setOpen(false)}>
           Лента
         </NavLink>
-        <NavLink to="/cabinet" className={linkClass} onClick={() => setOpen(false)}>
+        <NavLink to="/profile" className={linkClass} onClick={() => setOpen(false)}>
           Личный кабинет
         </NavLink>
 

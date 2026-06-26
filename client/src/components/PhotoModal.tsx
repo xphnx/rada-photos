@@ -9,6 +9,7 @@ import {
   useToggleReactionMutation,
 } from '../api/reactionApi/reactionApi';
 import { ReactionPicker } from './ReactionPicker';
+import { Comments } from './Comments';
 
 
 interface Props {
@@ -174,10 +175,7 @@ const [direction, setDirection] = useState(0);
 
 
         <div className="flex-1 overflow-y-auto p-4">
-          <p className="mb-2 text-xs uppercase tracking-wide text-album-muted">
-            Комментарии
-          </p>
-          <p className="text-sm text-album-muted">Комментариев пока нет.</p>
+            <Comments photoId={photo.id} />
         </div>
       </aside>
     </motion.div>,

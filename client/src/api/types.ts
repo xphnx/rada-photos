@@ -4,6 +4,7 @@ export enum ApiTagEnum {
     AUTH = 'AUTH',
     PHOTO = 'PHOTO',
     REACTION = 'REACTION',
+    COMMENT = 'COMMENT'
 }
 
 export interface PhotoSummary {

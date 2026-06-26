@@ -117,4 +117,31 @@ export class ReactionsService {
 
     return result;
   }
+
+  async getUserStats(userId: string) {
+    const [likes, reactions, comments] = await Promise.all([
+      this.likes.count({ where: { user: { id: userId } } }),
+      this.reactions.count({ where: { user: { id: userId } } }),
+      this.comments.count({ where: { user: { id: userId } } }),
+    ]);
+
+    return { likes, reactions, comments };
+  }
+
+  async getLikedPhotoIds(userId: string) {
+    const rows = await this.likes.find({
+      where: { user: { id: userId } },
+      select: { photoId: true },
+    });
+
+    return rows.map((r) => r.photoId);
+  }
+
+  async getReactedPhotoIds(userId: string) {
+    const rows = await this.reactions.find({
+      where: { user: { id: userId } },
+      select: { photoId: true },
+    });
+    return rows.map((r) => r.photoId);
+  }
 }

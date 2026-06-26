@@ -1,6 +1,7 @@
 import {
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -10,21 +11,34 @@ import { DiskSource, Photo, YandexItem } from './types';
 import { YANDEX_DISK } from '../config/config.constants';
 import { ReactionsService } from '../reaction/reaction.service';
 import { periodOf, Season } from './period';
+import { InjectRepository } from '@nestjs/typeorm';
+import { HiddenPhoto } from './hidden-photo.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class PhotosService implements OnModuleInit {
   private readonly sources: DiskSource[];
 
   private cache: Photo[] = [];
-  private cacheExpiresAt = 0;
+  private photoMeta = new Map<
+    string,
+    { sourceKey: DiskSource['key']; path: string }
+  >();
   private building: Promise<Photo[]> | null = null;
-  private readonly cacheTtlMs = 5 * 60 * 1000;
   private revisions: Record<string, number> = {};
-  private readonly allowedFolders = ['disk:/Фотокамера/', 'disk:/Photos/'];
+  private readonly photoFolders = [
+    'disk:/Photos',
+    'disk:/Фотокамера',
+    'disk:/Фотки',
+  ];
+  private hidden = new Set<string>();
+  private ready = false;
 
   constructor(
     configService: ConfigService,
     private readonly reactionsService: ReactionsService,
+    @InjectRepository(HiddenPhoto)
+    private readonly hiddenRepo: Repository<HiddenPhoto>,
   ) {
     this.sources = [
       {
@@ -33,34 +47,17 @@ export class PhotosService implements OnModuleInit {
         token: configService.getOrThrow<string>(YANDEX_DISK.MAIN_TOKEN),
         path: configService.get<string>(YANDEX_DISK.MAIN_PATH) ?? '/',
       },
-      // {
-      //   key: 'second',
-      //   label: 'Катя',
-      //   token: configService.getOrThrow<string>(YANDEX_DISK.SECOND_TOKEN),
-      //   path: configService.get<string>(YANDEX_DISK.SECOND_PATH) ?? '/',
-      // },
+      {
+        key: 'second',
+        label: 'Катя',
+        token: configService.getOrThrow<string>(YANDEX_DISK.SECOND_TOKEN),
+        path: configService.get<string>(YANDEX_DISK.SECOND_PATH) ?? '/',
+      },
     ];
   }
 
-  private async getAllPhotos(): Promise<Photo[] | null> {
-    if (this.cache.length && Date.now() < this.cacheExpiresAt) {
-      return this.cache;
-    }
-
-    if (!this.building) {
-      this.building = this.buildAllPhotos().finally(() => {
-        this.building = null;
-      });
-    }
-
-    const photos = await this.building;
-    this.cache = photos;
-    this.cacheExpiresAt = Date.now() + this.cacheTtlMs;
-
-    return photos;
-  }
-
   private async buildAllPhotos(): Promise<Photo[]> {
+    this.photoMeta.clear();
     const results = await Promise.allSettled(
       this.sources.map((source) => this.listFromSource(source)),
     );
@@ -78,6 +75,7 @@ export class PhotosService implements OnModuleInit {
       });
     }
     this.cache = await this.building;
+    this.ready = true;
     return this.cache;
   }
 
@@ -100,58 +98,76 @@ export class PhotosService implements OnModuleInit {
     return changed;
   }
 
-  private async listFromSource(source: DiskSource): Promise<Photo[]> {
+  private async listFolder(
+    source: DiskSource,
+    path: string,
+    photos: Photo[],
+  ): Promise<void> {
     const limit = 1000;
     let offset = 0;
-    const photos: Photo[] = [];
 
-    try {
-      while (true) {
-        const data = await this.yandexGet<{ items: YandexItem[] }>(
+    while (true) {
+      let data: { _embedded?: { items: YandexItem[] } };
+      try {
+        data = await this.yandexGet<{ _embedded?: { items: YandexItem[] } }>(
           source.token,
-          '/resources/files',
-          {
-            media_type: 'image',
-            limit: String(limit),
-            offset: String(offset),
-            path: 'disk:/',
-          },
+          '/resources',
+          { path, limit: String(limit), offset: String(offset) },
         );
-
-        const items =
-          data.items.filter(
-            (item) =>
-              item.path.startsWith('disk:/Photos') ||
-              item.path.startsWith('disk:/Фотокамера'),
-          ) ?? [];
-
-        if (items.length === 0) {
-          break;
-        }
-
-        photos.push(
-          ...items.map((item) => ({
-            id: item.resource_id,
-            name: item.name,
-            thumbnailUrl: `/api/photos/thumbnail?source=${source.key}&path=${encodeURIComponent(item.path)}`,
-            takenAt: item.photoslice_time ?? item.modified ?? '',
-            likeCount: 0,
-            reactions: {},
-            commentCount: 0,
-            liked: false,
-            myReaction: null,
-          })),
-        );
-
-        offset += limit;
+      } catch {
+        return;
       }
 
-      return photos;
-    } catch (error) {
-      console.error('Ошибка построения ленты', error);
+      const items = data._embedded?.items ?? [];
+      if (items.length === 0) break;
 
-      return [];
+      for (const item of items) {
+        if (item.type === 'dir') {
+          await this.listFolder(source, item.path, photos);
+          continue;
+        }
+
+        if (item.media_type !== 'image' && item.media_type !== 'video') {
+          continue;
+        }
+
+        const isVideo = item.media_type === 'video';
+
+        this.photoMeta.set(item.resource_id, {
+          sourceKey: source.key,
+          path: item.path,
+        });
+
+        photos.push({
+          id: item.resource_id,
+          name: item.name,
+          type: isVideo ? 'video' : 'image',
+          thumbnailUrl: `/api/photos/thumbnail?source=${source.key}&path=${encodeURIComponent(item.path)}`,
+          videoUrl: isVideo
+            ? `/api/photos/video?source=${source.key}&path=${encodeURIComponent(item.path)}`
+            : undefined,
+          takenAt: item.photoslice_time ?? item.modified ?? '',
+          likeCount: 0,
+          reactions: {},
+          commentCount: 0,
+          liked: false,
+          myReaction: null,
+        });
+      }
+
+      offset += limit;
+      if (items.length < limit) break;
     }
+  }
+
+  private async listFromSource(source: DiskSource): Promise<Photo[]> {
+    const photos: Photo[] = [];
+
+    for (const folder of this.photoFolders) {
+      await this.listFolder(source, folder, photos);
+    }
+
+    return photos;
   }
 
   private getSource(key: string): DiskSource {
@@ -191,10 +207,39 @@ export class PhotosService implements OnModuleInit {
     return response.json() as Promise<T>;
   }
 
-  onModuleInit() {
+  private async yandexDelete(token: string, path: string): Promise<void> {
+    const url = new URL(`${YANDEX_DISK.API}/resources`);
+    url.searchParams.set('path', path);
+    url.searchParams.set('permanently', 'true');
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: { Authorization: `OAuth ${token}` },
+    });
+
+    if (![200, 202, 204].includes(response.status)) {
+      const body = await response.text();
+      throw new InternalServerErrorException(
+        `Yandex Disk DELETE ${response.status}: ${body}`,
+      );
+    }
+  }
+
+  private async ensureReady(): Promise<void> {
+    if (this.ready) return;
+    await this.refresh();
+  }
+
+  async onModuleInit() {
+    await this.loadHidden();
     void this.refresh().catch((error) =>
       console.error('Не удалось собрать ленту:', error),
     );
+  }
+
+  private async loadHidden() {
+    const rows = await this.hiddenRepo.find();
+    this.hidden = new Set(rows.map((r) => r.photoId));
   }
 
   @Interval(5 * 60 * 1000)
@@ -209,39 +254,49 @@ export class PhotosService implements OnModuleInit {
     }
   }
 
+  async hidePhoto(id: string, userId: string) {
+    if (!this.hidden.has(id)) {
+      await this.hiddenRepo.save({ photoId: id, hiddenBy: userId });
+      this.hidden.add(id);
+    }
+    return { success: true };
+  }
+
+  async unhidePhoto(id: string) {
+    await this.hiddenRepo.delete({ photoId: id });
+    this.hidden.delete(id);
+    return { success: true };
+  }
+
   async getPage(
     offset: number,
     limit: number,
     userId: string,
     season?: Season,
     year?: number,
+    order: 'asc' | 'desc' = 'desc',
   ) {
+    await this.ensureReady();
+
+    const visible = this.cache.filter((p) => !this.hidden.has(p.id));
     const source =
       season && year
-        ? this.cache.filter((p) => {
+        ? visible.filter((p) => {
             const period = periodOf(p.takenAt);
             return period?.season === season && period.year === year;
           })
-        : this.cache;
+        : visible;
 
-    const slice = source.slice(offset, offset + limit);
+    const ordered = order === 'asc' ? [...source].reverse() : source;
+
+    const slice = ordered.slice(offset, offset + limit);
     const ids = slice.map((p) => p.id);
-
     const summary = await this.reactionsService.getSummary(ids, userId);
 
-    const items = slice.map((p) => ({ ...p, ...summary[p.id] }));
-
-    return { items, total: source.length };
-  }
-
-  async listPhotos(): Promise<Photo[]> {
-    const results = await Promise.allSettled(
-      this.sources.map((source) => this.listFromSource(source)),
-    );
-
-    return results
-      .filter((r) => r.status === 'fulfilled')
-      .flatMap((r) => r.value);
+    return {
+      items: slice.map((p) => ({ ...p, ...summary[p.id] })),
+      total: source.length,
+    };
   }
 
   async getThumbnail(sourceKey: string, path: string, size = 'L') {
@@ -271,13 +326,16 @@ export class PhotosService implements OnModuleInit {
 
     return { buffer, contentType };
   }
-  availablePeriods() {
+
+  async availablePeriods() {
+    await this.ensureReady();
     const map = new Map<
       string,
       { season: Season; year: number; count: number }
     >();
 
     for (const p of this.cache) {
+      if (this.hidden.has(p.id)) continue;
       const period = periodOf(p.takenAt);
       if (!period) continue;
 
@@ -292,5 +350,50 @@ export class PhotosService implements OnModuleInit {
       (a, b) =>
         b.year - a.year || order.indexOf(b.season) - order.indexOf(a.season),
     );
+  }
+
+  async getPhotosByIds(ids: string[], userId: string) {
+    await this.ensureReady();
+    if (ids.length === 0) return [];
+
+    const idSet = new Set(ids);
+    const found = this.cache.filter(
+      (p) => idSet.has(p.id) && !this.hidden.has(p.id),
+    );
+
+    const summary = await this.reactionsService.getSummary(
+      found.map((p) => p.id),
+      userId,
+    );
+
+    return found.map((p) => ({ ...p, ...summary[p.id] }));
+  }
+
+  async deletePhoto(id: string): Promise<{ success: boolean }> {
+    const meta = this.photoMeta.get(id);
+
+    if (!meta) {
+      throw new NotFoundException('Фото не найдено');
+    }
+
+    const source = this.getSource(meta.sourceKey);
+    await this.yandexDelete(source.token, meta.path);
+
+    this.cache = this.cache.filter((p) => p.id !== id);
+    this.photoMeta.delete(id);
+
+    return { success: true };
+  }
+
+  async getVideoHref(sourceKey: string, path: string): Promise<string> {
+    const source = this.getSource(sourceKey);
+
+    const data = await this.yandexGet<{ href: string }>(
+      source.token,
+      '/resources/download',
+      { path },
+    );
+
+    return data.href;
   }
 }
