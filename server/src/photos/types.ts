@@ -6,6 +6,7 @@ export interface DiskSource {
 }
 
 export interface YandexItem {
+  resource_id: string;
   name: string;
   path: string;
   type: 'file' | 'dir';
@@ -17,8 +18,11 @@ export interface YandexItem {
 export interface Photo {
   id: string;
   name: string;
-  source: string;
-  sourceLabel: string;
   thumbnailUrl: string;
   takenAt: string;
+  likeCount: number;
+  reactions: Record<string, number>;
+  commentCount: number;
+  liked: boolean;
+  myReaction: string | null;
 }

@@ -1,20 +1,24 @@
 import { useEffect, useMemo, useRef, useState, type FC } from "react";
 
-import { useGetPhotosInfiniteQuery } from "../../api/photoApi/photoApi";
-import { PhotoCard, PhotoModal, Spinner } from "../../components";
+import { useGetPeriodsQuery, useGetPhotosInfiniteQuery } from "../../api/photoApi/photoApi";
+import { PeriodFilter, PhotoCard, PhotoModal, Spinner } from "../../components";
 import { useColumnCount } from "./useColumnCount";
 import type { Photo } from "../../models/Photo";
 import { useVisiblePeriod } from "../../hooks/useVisiblePeriod";
+import type { PhotoFilter } from "../../models/Period";
 
 export const FeedPage: FC = () => {
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
+    const [filter, setFilter] = useState<PhotoFilter>({});
+
 
     const sentinelRef = useRef<HTMLDivElement | null>(null);
     const { data, fetchNextPage, hasNextPage, isLoading, isFetchingNextPage } =
-    useGetPhotosInfiniteQuery();
+    useGetPhotosInfiniteQuery(filter);
 
     const [gridRef, columnCount] = useColumnCount();
-    const { label, registerCard } = useVisiblePeriod();
+    const { registerCard } = useVisiblePeriod();
+    const { data: periods = [] } = useGetPeriodsQuery();
 
     const {columns, photos } = useMemo(() => {
         const photos = data?.pages.flatMap((page) => page.items) ?? [];
@@ -40,7 +44,7 @@ export const FeedPage: FC = () => {
             if (entries[0].isIntersecting && !isFetchingNextPage) {
                 void fetchNextPage();
             }
-            });
+            }, { rootMargin: '800px' });
         observer.observe(el);
         return () => observer.disconnect();
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -48,11 +52,9 @@ export const FeedPage: FC = () => {
    return (
     <div className="mx-auto max-w-8xl px-4 pb-16">
       <header className="sticky top-0 z-10 -mx-4 mb-6 flex items-center justify-between border-b border-album-line bg-album-bg/80 px-8 py-4 backdrop-blur">
-        <h1 className="font-grotesk text-2xl text-album-ink">
-          {label ?? ''}
-        </h1>
-
+        <PeriodFilter periods={periods} value={filter} onChange={setFilter} />
       </header>
+
 
       {isLoading ? (
         <div className="columns-2 gap-3 sm:columns-3 lg:columns-4">

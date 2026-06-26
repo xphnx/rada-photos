@@ -11,5 +11,6 @@ import { Like } from '../like/like.entity';
   imports: [TypeOrmModule.forFeature([Reaction, Like, Comment])],
   controllers: [ReactionsController],
   providers: [ReactionsService],
+  exports: [ReactionsService],
 })
 export class ReactionsModule {}

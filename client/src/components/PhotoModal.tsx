@@ -1,12 +1,10 @@
-import { useEffect, useState, type FC } from 'react';
+import { useEffect, useRef, useState, type FC } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import { skipToken } from '@reduxjs/toolkit/query/react';
 
 import type { Photo } from '../models/Photo';
 import { ModalImage } from './ModalImage';
 import {
-  useGetReactionSummaryQuery,
   useToggleLikeMutation,
   useToggleReactionMutation,
 } from '../api/reactionApi/reactionApi';
@@ -32,10 +30,12 @@ const [direction, setDirection] = useState(0);
   const photo = photos[index];
   const hasPrev = index > 0;
   const hasNext = index < photos.length - 1;
+  const summary = photo;
 
-  const { data: summary } = useGetReactionSummaryQuery(photo ? photo.id : skipToken);
   const [toggleReaction] = useToggleReactionMutation();
   const [toggleLike] = useToggleLikeMutation();
+
+  const preloaded = useRef<Set<string>>(new Set());
 
 
   const goPrev = () => {
@@ -66,14 +66,18 @@ const [direction, setDirection] = useState(0);
   }, [index, hasPrev, hasNext]);
 
   useEffect(() => {
-    [index - 1, index + 1].forEach((i) => {
-        const neighbor = photos[i];
-        if (neighbor) {
-        const img = new Image();
-        img.src = `${neighbor.thumbnailUrl}&size=XXL`;
-        }
-    });
-  }, [index, photos]);
+  [index - 1, index + 1].forEach((i) => {
+    const neighbor = photos[i];
+    if (!neighbor) return;
+
+    const url = `${neighbor.thumbnailUrl}&size=XXL`;
+    if (preloaded.current.has(url)) return;
+
+    preloaded.current.add(url);
+    const img = new Image();
+    img.src = url;
+  });
+}, [index, photos]);
 
 
   if (!photo) return null;

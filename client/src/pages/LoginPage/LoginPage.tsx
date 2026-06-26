@@ -5,13 +5,16 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 import { schema } from "./schema";
+import heroImg from '../../assets/main.jpg';
 import { useLoginMutation, useRegisterMutation } from "../../api/authApi/authApi";
+import { Spinner } from "../../components";
 
 export const LoginPage: FC = () => {
     const navigate = useNavigate();
 
     const [isRegister, setIsRegister] = useState(false)
     const [showPassword, setShowPassword] = useState(false);
+    const [heroLoaded, setHeroLoaded] = useState(false);
 
     const [login] = useLoginMutation()
     const [signUp] = useRegisterMutation()
@@ -37,13 +40,22 @@ export const LoginPage: FC = () => {
 
     return (
     <div className="flex min-h-screen items-center justify-center bg-album-bg p-4">
-      <div className="flex min-h-200 w-full max-w-350 overflow-hidden rounded-3xl bg-album-card shadow-xl">
+      <div className="flex w-full max-w-350 rounded-3xl bg-album-card shadow-xl lg:max-h-[calc(100vh-32px)] lg:overflow-hidden">
         <div className="relative hidden w-1/2 lg:block">
-          <img
-            src="/login.jpg"
-            alt=""
-            className="h-full w-full object-cover"
-          />
+          {!heroLoaded && (
+              <div className="absolute inset-0 grid place-items-center">
+                <Spinner className="text-album-muted" />
+              </div>
+            )}
+
+            <img
+              src={heroImg}
+              alt=""
+              onLoad={() => setHeroLoaded(true)}
+              className={`h-full w-full object-cover transition-opacity duration-500 ${
+                heroLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
           <div className="absolute inset-0 bg-linear-to-t from-black/65 via-black/10 to-transparent" />
           <div className="absolute bottom-0 p-10 text-white">
             <h2 className="font-display text-4xl leading-tight">
@@ -55,7 +67,7 @@ export const LoginPage: FC = () => {
           </div>
         </div>
 
-        <div className="flex w-full flex-col justify-center px-8 py-12 lg:w-1/2 lg:px-14">
+        <div className="flex w-full flex-col justify-center px-8 py-12 lg:w-1/2 lg:px-14 margin:auto">
           <div className="mb-8 flex items-center justify-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-album-accent text-white">
               📷

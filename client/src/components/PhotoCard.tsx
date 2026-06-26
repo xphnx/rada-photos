@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { useEffect, useState, type FC } from 'react';
 
 import type { Photo } from '../models/Photo';
-import { useGetReactionSummaryQuery, useToggleLikeMutation } from '../api/reactionApi/reactionApi';
+import { useToggleLikeMutation } from '../api/reactionApi/reactionApi';
 
 interface Props {
   photo: Photo;
@@ -15,12 +15,12 @@ export const PhotoCard: FC<Props> = ({ photo, index, cardRef, onOpen }) => {
   const [aspect, setAspect] = useState<number | null>(null);
   const [borderDone, setBorderDone] = useState(false);
 
-  const { data: summary } = useGetReactionSummaryQuery(photo.id);
   const [toggleLike] = useToggleLikeMutation();
 
-  const likes = summary?.likeCount ?? 0;
-  const liked = summary?.liked ?? false;
-  const comments = summary?.commentCount ?? 0;
+  const likes = photo?.likeCount ?? 0;
+  const liked = photo?.liked ?? false;
+  const comments = photo?.commentCount ?? 0;
+  const thumbUrl = `${photo.thumbnailUrl}&size=M`;
 
   const onLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -33,12 +33,12 @@ export const PhotoCard: FC<Props> = ({ photo, index, cardRef, onOpen }) => {
     const handleLoad = () => setAspect(img.naturalWidth / img.naturalHeight);
 
     img.onload = handleLoad;        
-    img.src = photo.thumbnailUrl;  
+    img.src = thumbUrl;  
 
     if (img.complete && img.naturalWidth > 0) {
       handleLoad();
     }
-  }, [photo.thumbnailUrl]);
+  }, [thumbUrl]);
 
   return (
     <figure
@@ -49,7 +49,7 @@ export const PhotoCard: FC<Props> = ({ photo, index, cardRef, onOpen }) => {
     >
       {aspect && (
         <motion.img
-          src={photo.thumbnailUrl}
+          src={thumbUrl}
           alt={photo.name}
           className="h-full w-full object-cover transition duration-300 group-hover:brightness-90"
           initial={{ opacity: 0 }}
