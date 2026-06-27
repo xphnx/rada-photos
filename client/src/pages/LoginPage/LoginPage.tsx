@@ -6,8 +6,9 @@ import { z } from "zod";
 
 import { schema } from "./schema";
 import heroImg from '../../assets/main.jpg';
-import { useLoginMutation, useRegisterMutation } from "../../api/authApi/authApi";
+import { useForgotPasswordMutation, useLoginMutation, useRegisterMutation } from "../../api/authApi/authApi";
 import { Spinner } from "../../components";
+import { toast } from "sonner";
 
 export const LoginPage: FC = () => {
     const navigate = useNavigate();
@@ -15,9 +16,12 @@ export const LoginPage: FC = () => {
     const [isRegister, setIsRegister] = useState(false)
     const [showPassword, setShowPassword] = useState(false);
     const [heroLoaded, setHeroLoaded] = useState(false);
+    const [forgotMode, setForgotMode] = useState(false);
+    const [forgotEmail, setForgotEmail] = useState('');
 
     const [login] = useLoginMutation()
     const [signUp] = useRegisterMutation()
+    const [forgotPassword, { isLoading: forgotLoading }] = useForgotPasswordMutation();
 
     const submit = isRegister ? signUp : login;
 
@@ -37,6 +41,14 @@ export const LoginPage: FC = () => {
             return;
        }
     }
+
+
+    const onForgot = async (e: React.FormEvent) => {
+      e.preventDefault();
+      await forgotPassword({ email: forgotEmail });
+      toast.success('Если такой email есть — мы отправили ссылку для сброса');
+      setForgotMode(false);
+    };
 
     return (
     <div className="flex min-h-screen items-center justify-center bg-album-bg p-4">
@@ -86,7 +98,35 @@ export const LoginPage: FC = () => {
               : 'Введите данные для входа'}
           </p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
+         {forgotMode ? <form onSubmit={onForgot} className="mt-8 space-y-5">
+                          <div>
+                            <label className="mb-1.5 block text-sm font-medium text-album-ink">
+                              Электронная почта
+                            </label>
+                            <input
+                              type="email"
+                              required
+                              value={forgotEmail}
+                              onChange={(e) => setForgotEmail(e.target.value)}
+                              placeholder="you@example.com"
+                              className="w-full rounded-xl border border-album-line bg-album-card px-4 py-3 text-album-ink outline-none transition focus:border-album-accent"
+                            />
+                          </div>
+                          <button
+                            type="submit"
+                            disabled={forgotLoading}
+                            className="w-full rounded-xl bg-album-accent py-3 font-medium text-white transition hover:bg-album-accent/90 disabled:opacity-60"
+                          >
+                            {forgotLoading ? 'Отправляем…' : 'Отправить ссылку'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setForgotMode(false)}
+                            className="w-full text-center text-sm text-album-accent"
+                          >
+                            Назад ко входу
+                          </button>
+                        </form> :  <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-album-ink">
                 Электронная почта
@@ -140,9 +180,10 @@ export const LoginPage: FC = () => {
                 <input type="checkbox" className="accent-album-accent" />
                 Запомнить меня
               </label>
-              <span className="cursor-pointer text-album-accent">
+              {!isRegister && <button type="button" onClick={() => setForgotMode(true)} className="cursor-pointer text-album-accent">
                 Забыли пароль?
-              </span>
+              </button>
+              }
             </div>
 
             <button
@@ -156,7 +197,7 @@ export const LoginPage: FC = () => {
                   ? 'Зарегистрироваться'
                   : 'Войти'}
             </button>
-          </form>
+          </form>}
 
           <div className="my-6 flex items-center gap-3 text-album-muted">
             <span className="h-px flex-1 bg-album-line" />
@@ -174,7 +215,7 @@ export const LoginPage: FC = () => {
             Войти через Яндекс
           </a>
 
-          <p className="mt-6 text-center text-sm text-album-muted">
+          {!forgotMode && <p className="mt-6 text-center text-sm text-album-muted">
             {isRegister ? 'Уже есть аккаунт? ' : 'Нет аккаунта? '}
             <button
               onClick={() => setIsRegister((p) => !p)}
@@ -182,7 +223,7 @@ export const LoginPage: FC = () => {
             >
               {isRegister ? 'Войти' : 'Регистрация'}
             </button>
-          </p>
+          </p>}
         </div>
       </div>
     </div>

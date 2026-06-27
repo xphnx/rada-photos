@@ -1,17 +1,16 @@
-import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
-
 import { api } from '../baseApi';
 import { ApiTagEnum, type PhotosPage } from '../types';
 import type { Period, PhotoFilter } from '../../models/Period';
+import type { AppDispatch, RootState } from '../../store/rootReducer';
 
 
 function removeFromFeed(
   photoId: string,
-  dispatch: ThunkDispatch<any, any, UnknownAction>,
-  getState: () => unknown,
+  dispatch: AppDispatch,
+  getState: () => RootState,
 ) {
   return photosApi.util
-    .selectInvalidatedBy(getState() as any, [ApiTagEnum.PHOTO])
+    .selectInvalidatedBy(getState(), [ApiTagEnum.PHOTO])
     .filter((e) => e.endpointName === 'getPhotos')
     .map((e) =>
       dispatch(

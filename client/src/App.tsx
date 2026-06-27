@@ -2,7 +2,7 @@ import type { FC } from "react"
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import { Toaster } from 'sonner';
 
-import { FeedPage, LoginPage, ProfilePage } from "./pages"
+import { FeedPage, LoginPage, ProfilePage, ResetPasswordPage } from "./pages"
 import { Layout, ProtectedRoute } from "./components"
 
 const App: FC = () => {
@@ -11,6 +11,7 @@ const App: FC = () => {
       <Toaster />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route path="/feed" element={<FeedPage />} />
