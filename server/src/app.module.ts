@@ -18,8 +18,12 @@ import { MailModule } from './mail/mail.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: 'src/config/.env',
+      envFilePath: [
+        `src/config/.env.${process.env.NODE_ENV ?? 'development'}`,
+        'src/config/.env',
+      ],
     }),
+
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

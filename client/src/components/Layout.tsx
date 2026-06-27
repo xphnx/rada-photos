@@ -44,7 +44,7 @@ export const Layout: FC = () => {
             📷
           </span>
           <span className="text-lg font-semibold text-album-ink">
-            RadaPhoto
+            Lovely Crew
           </span>
         </div>
 

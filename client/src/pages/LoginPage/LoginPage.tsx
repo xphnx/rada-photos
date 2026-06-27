@@ -74,7 +74,7 @@ export const LoginPage: FC = () => {
               Наши моменты — в одном альбоме
             </h2>
             <p className="mt-3 max-w-sm text-white/80">
-              RadaPhoto собирает фотографии семьи в одном тёплом месте.
+              Loverly Crew собирает фотографии семьи в одном тёплом месте.
             </p>
           </div>
         </div>
@@ -85,7 +85,7 @@ export const LoginPage: FC = () => {
               📷
             </span>
             <span className="text-lg font-semibold text-album-ink">
-              RadaPhoto
+              Loverly Crew
             </span>
           </div>
 

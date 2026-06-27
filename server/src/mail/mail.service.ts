@@ -22,9 +22,9 @@ export class MailService {
     await this.transporter.sendMail({
       from: this.config.getOrThrow<string>('SMTP_FROM'),
       to,
-      subject: 'Восстановление пароля — RadaPhoto',
+      subject: 'Восстановление пароля — Loverly Crew',
       html: `
-        <p>Вы запросили сброс пароля в RadaPhoto.</p>
+        <p>Вы запросили сброс пароля в Loverly Crew.</p>
         <p>Чтобы задать новый пароль, перейдите по ссылке (действует 1 час):</p>
         <p><a href="${link}">${link}</a></p>
         <p>Если вы не запрашивали сброс — просто проигнорируйте письмо.</p>
