@@ -12,6 +12,7 @@ import { CommentModule } from './comment/comment.module';
 import { ReactionsModule } from './reaction/reaction.module';
 import { LikeModule } from './like/like.module';
 import { ProfileModule } from './profile/profile.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ProfileModule } from './profile/profile.module';
     CommentModule,
     LikeModule,
     ProfileModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

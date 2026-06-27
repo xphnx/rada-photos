@@ -60,4 +60,8 @@ export class UserService {
 
     return newUser;
   }
+
+  async setPassword(userId: string, passwordHash: string) {
+    await this.userRepository.update({ id: userId }, { passwordHash });
+  }
 }

@@ -17,6 +17,7 @@ import { JwtAuthGuard } from './jwt.guard';
 import { CurrentUser } from './current-user.decorator';
 import { User } from '../user/user.entity';
 import { COOKIE_MAX_AGE } from '../config/config.constants';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -90,5 +91,15 @@ export class AuthController {
     const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
 
     return response.redirect(`${frontendUrl}/feed`);
+  }
+
+  @Post('forgot-password')
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.requestPasswordReset(dto.email);
+  }
+
+  @Post('reset-password')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.password);
   }
 }

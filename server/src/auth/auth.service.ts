@@ -1,11 +1,15 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Repository } from 'typeorm';
 import bcrypt from 'bcrypt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { createHash, randomBytes } from 'crypto';
 
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -13,6 +17,8 @@ import { UserService } from '../user/user.service';
 import { User } from '../user/user.entity';
 import { YANDEX_LOGIN } from '../config/config.constants';
 import { isAdminEmail } from './admin/admin.util';
+import { PasswordResetToken } from './password-reset-token.entity';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +26,9 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @InjectRepository(PasswordResetToken)
+    private readonly resetTokens: Repository<PasswordResetToken>,
+    private readonly mailService: MailService,
   ) {}
 
   private buildAuthResponse(user: User) {
@@ -168,5 +177,54 @@ export class AuthService {
     });
 
     return `https://oauth.yandex.ru/authorize?${params.toString()}`;
+  }
+
+  async requestPasswordReset(email: string) {
+    const user = await this.userService.findByEmail(email);
+
+    if (user) {
+      await this.resetTokens.delete({ user: { id: user.id } });
+
+      const token = randomBytes(32).toString('hex');
+      const tokenHash = createHash('sha256').update(token).digest('hex');
+
+      await this.resetTokens.save(
+        this.resetTokens.create({
+          user: { id: user.id },
+          tokenHash,
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        }),
+      );
+
+      const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+      const link = `${frontendUrl}/reset-password?token=${token}`;
+      try {
+        await this.mailService.sendPasswordReset(user.email, link);
+      } catch (error) {
+        console.error('Не удалось отправить письмо сброса:', error);
+      }
+    }
+
+    return { success: true };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    const record = await this.resetTokens.findOne({
+      where: { tokenHash },
+      relations: { user: true },
+    });
+
+    if (!record || record.expiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Ссылка недействительна или устарела');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.userService.setPassword(record.user.id, passwordHash);
+
+    await this.resetTokens.delete({ user: { id: record.user.id } });
+
+    return { success: true };
   }
 }
